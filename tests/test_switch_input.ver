@@ -1,0 +1,24 @@
+print("=== Scelta Frutto ===")
+print("Scrivi: 1=mela, 2=banana, 3=arancia")
+
+let scelta = input("La tua scelta: ")
+
+let frutto = switch(scelta, {
+    "1": "mela",
+    "2": "banana",
+    "3": "arancia",
+    "mela": "sei uno scrittore di prosa",
+    "banana": "ti piacciono i gialli",
+    "arancia": "ami i romanzi"
+}, "scelta sconosciuta")
+
+print("Hai scelto:", frutto)
+
+let numero = int(input("Inserisci un numero da 1 a 3: "))
+let nome = switch(numero, {
+    1: "uno",
+    2: "due",
+    3: "tre"
+}, "non riconosciuto")
+
+print("Numero:", nome)

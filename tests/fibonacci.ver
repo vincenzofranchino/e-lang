@@ -1,0 +1,8 @@
+fn fibonacci(n)
+    if n < 2
+        return n
+    end
+    return fibonacci(n - 1) + fibonacci(n - 2)
+end
+
+print("Fibonacci(10) = " + str(fibonacci(10)))

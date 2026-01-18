@@ -1,0 +1,41 @@
+fn elabora_ordine(prezzo, saldo_disponibile)
+    let connessione_aperta = true
+    print("--- Inizio Transazione ---")
+    print("Stato: Connessione database aperta.")
+
+    try
+        # 1. Controllo validità input
+        if prezzo <= 0
+            throw("ERRORE_DATI: Il prezzo deve essere maggiore di zero.")
+        end
+
+        # 2. Verifica fondi
+        print("Verifica saldo in corso...")
+        if prezzo > saldo_disponibile
+            throw("ERRORE_SALDO: Fondi insufficienti per l'acquisto.")
+        end
+
+        # 3. Simulazione successo
+        print("Pagamento di €$prezzo approvato!")
+        
+    catch e
+        # Gestione dell'errore specifico
+        print("ATTENZIONE: Si è verificato un problema durante l'ordine.")
+        print("Dettaglio errore: ", e)
+    
+    finally
+        # Azione di pulizia (eseguita SEMPRE)
+        connessione_aperta = false
+        print("Stato: Connessione database chiusa correttamente.")
+        print("--- Fine Transazione ---\n")
+    end
+end
+
+# Test 1: Ordine valido
+elabora_ordine(50, 100)
+
+# Test 2: Fondi insufficienti (scatena il catch)
+elabora_ordine(200, 100)
+
+# Test 3: Prezzo errato (scatena il catch)
+elabora_ordine(-10, 100)

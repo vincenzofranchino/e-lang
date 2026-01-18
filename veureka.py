@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional, Callable
 class TT(Enum):
     # Keywords
     LET = auto()
+    CONST = auto()
     FN = auto()
     CLASS = auto()
     NEW = auto()
@@ -43,6 +44,18 @@ class TT(Enum):
     OR = auto()
     NOT = auto()
     INCLUDE = auto()
+    TRY = auto()
+    CATCH = auto()
+    FINALLY = auto()
+    THROW = auto()
+    
+    # Bitwise operators
+    AMPERSAND = auto()
+    PIPE = auto()
+    CARET = auto()
+    TILDE = auto()
+    LSHIFT = auto()
+    RSHIFT = auto()
     
     # Literals
     NUMBER = auto()
@@ -106,9 +119,11 @@ class Lexer:
             'self': TT.SELF, 'if': TT.IF, 'elif': TT.ELIF,
             'else': TT.ELSE, 'for': TT.FOR, 'in': TT.IN, 'while': TT.WHILE,
             'return': TT.RETURN, 'break': TT.BREAK, 'continue': TT.CONTINUE,
+            'const': TT.CONST, 'let': TT.LET,
             'match': TT.MATCH, 'case': TT.CASE, 'end': TT.END,
             'true': TT.TRUE, 'false': TT.FALSE, 'nil': TT.NIL,
-            'and': TT.AND, 'or': TT.OR, 'not': TT.NOT, 'include': TT.INCLUDE
+            'and': TT.AND, 'or': TT.OR, 'not': TT.NOT, 'include': TT.INCLUDE,
+            'try': TT.TRY, 'catch': TT.CATCH, 'finally': TT.FINALLY, 'throw': TT.THROW,
         }
     
     def tokenize(self) -> List[Token]:
@@ -221,6 +236,15 @@ class Lexer:
                 tokens.append(self.make_token(TT.COLON, ':'))
             elif char == '.':
                 tokens.append(self.make_token(TT.DOT, '.'))
+            # Bitwise operators
+            elif char == '&':
+                tokens.append(self.make_token(TT.AMPERSAND, '&'))
+            elif char == '|':
+                tokens.append(self.make_token(TT.PIPE, '|'))
+            elif char == '^':
+                tokens.append(self.make_token(TT.CARET, '^'))
+            elif char == '~':
+                tokens.append(self.make_token(TT.TILDE, '~'))
             else:
                 raise SyntaxError(f"!! Carattere inaspettato '{char}' alla riga {self.line}:{self.col}")
         
@@ -324,6 +348,12 @@ class IncludeStmt(Node):
 
 @dataclass
 class LetStmt(Node):
+    name: str
+    value: Node
+    is_const: bool = False
+
+@dataclass
+class AssignStmt(Node):
     name: str
     value: Node
 
@@ -433,6 +463,17 @@ class IncrementDecrement(Node):
 class MapLit(Node):
     pairs: List[tuple]  # [(key, value), ...]
 
+@dataclass
+class TryStmt(Node):
+    try_body: List[Node]
+    catch_var: Optional[str]  # Nome della variabile che contiene l'errore
+    catch_body: Optional[List[Node]]
+    finally_body: Optional[List[Node]]
+
+@dataclass
+class ThrowStmt(Node):
+    value: Node
+
 # ============ PARSER ============
 
 class Parser:
@@ -449,7 +490,8 @@ class Parser:
     def parse_statement(self) -> Node:
         if self.match(TT.INCLUDE):
             return self.parse_include()
-        elif self.match(TT.LET):
+        elif self.match(TT.LET, TT.CONST):
+            self.pos -= 1  # Ritorna indietro
             return self.parse_let()
         elif self.match(TT.FN):
             return self.parse_function()
@@ -461,6 +503,10 @@ class Parser:
             return self.parse_for()
         elif self.match(TT.WHILE):
             return self.parse_while()
+        elif self.match(TT.TRY):
+            return self.parse_try()
+        elif self.match(TT.THROW):
+            return self.parse_throw()
         elif self.match(TT.RETURN):
             return self.parse_return()
         elif self.match(TT.BREAK):
@@ -495,10 +541,13 @@ class Parser:
         return ClassDef(name, methods)
     
     def parse_let(self) -> LetStmt:
+        is_const = self.match(TT.CONST)
+        if not is_const:
+            self.consume(TT.LET)
         name = self.consume(TT.IDENT).value
         self.consume(TT.ASSIGN)
         value = self.parse_expression()
-        return LetStmt(name, value)
+        return LetStmt(name, value, is_const)
     
     def parse_function(self) -> FnDef:
         name = None
@@ -574,6 +623,40 @@ class Parser:
             return ReturnStmt(None)
         return ReturnStmt(self.parse_expression())
     
+    def parse_try(self) -> TryStmt:
+        # try
+        try_body = []
+        while not self.check(TT.CATCH) and not self.check(TT.FINALLY) and not self.is_at_end():
+            try_body.append(self.parse_statement())
+        
+        catch_var = None
+        catch_body = None
+        
+        if self.match(TT.CATCH):
+            # catch(e) o catch e
+            if self.match(TT.LPAREN):
+                catch_var = self.consume(TT.IDENT).value
+                self.consume(TT.RPAREN)
+            else:
+                catch_var = self.consume(TT.IDENT).value
+            
+            catch_body = []
+            while not self.check(TT.FINALLY) and not self.check(TT.END) and not self.is_at_end():
+                catch_body.append(self.parse_statement())
+        
+        finally_body = None
+        if self.match(TT.FINALLY):
+            finally_body = []
+            while not self.check(TT.END) and not self.is_at_end():
+                finally_body.append(self.parse_statement())
+        
+        self.consume(TT.END)
+        return TryStmt(try_body, catch_var, catch_body, finally_body)
+    
+    def parse_throw(self) -> ThrowStmt:
+        value = self.parse_expression()
+        return ThrowStmt(value)
+    
     def parse_expression(self) -> Node:
         return self.parse_assignment()
     
@@ -608,10 +691,10 @@ class Parser:
                 op = self.advance().value
                 value = self.parse_assignment()
                 return CompoundAssign(expr.name, op, value)
-            # Assignment normale
+            # Assignment normale (non è una dichiarazione, è un'assegnazione)
             elif self.match(TT.ASSIGN):
                 value = self.parse_assignment()
-                return LetStmt(expr.name, value)
+                return AssignStmt(expr.name, value)
         
         return expr
     
@@ -624,9 +707,33 @@ class Parser:
         return left
     
     def parse_and(self) -> Node:
-        left = self.parse_comparison()
+        left = self.parse_bitwise_or()
         while self.match(TT.AND):
             op = 'and'
+            right = self.parse_bitwise_or()
+            left = BinaryOp(left, op, right)
+        return left
+    
+    def parse_bitwise_or(self) -> Node:
+        left = self.parse_bitwise_xor()
+        while self.match(TT.PIPE):
+            op = '|'
+            right = self.parse_bitwise_xor()
+            left = BinaryOp(left, op, right)
+        return left
+    
+    def parse_bitwise_xor(self) -> Node:
+        left = self.parse_bitwise_and()
+        while self.match(TT.CARET):
+            op = '^'
+            right = self.parse_bitwise_and()
+            left = BinaryOp(left, op, right)
+        return left
+    
+    def parse_bitwise_and(self) -> Node:
+        left = self.parse_comparison()
+        while self.match(TT.AMPERSAND):
+            op = '&'
             right = self.parse_comparison()
             left = BinaryOp(left, op, right)
         return left
@@ -680,7 +787,7 @@ class Parser:
                 return IncrementDecrement(operand, op, prefix=True)
             raise SyntaxError("!! ++ e -- richiedono una variabile o attributo")
         
-        if self.current().type in [TT.MINUS, TT.NOT]:
+        if self.current().type in [TT.MINUS, TT.NOT, TT.TILDE]:
             op = self.advance().value
             if op == 'not':
                 op = 'not'
@@ -774,8 +881,11 @@ class Parser:
                 key = self.advance().value
             elif self.current().type == TT.STRING:
                 key = self.advance().value
+            elif self.current().type == TT.NUMBER:
+                # Permetti numeri come chiavi
+                key = self.advance().value
             else:
-                raise SyntaxError("!! Chiave mappa deve essere identificatore o stringa")
+                raise SyntaxError("!! Chiave mappa deve essere identificatore, stringa o numero")
             
             self.consume(TT.COLON)
             value = self.parse_expression()
@@ -825,6 +935,10 @@ class ContinueException(Exception):
 class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
+
+class VeurekException(Exception):
+    """Eccezione lanciata da throw"""
+    pass
 
 class VerClass:
     def __init__(self, name: str, methods: Dict[str, 'VerFunction']):
@@ -891,8 +1005,10 @@ class Interpreter:
             'max': max,
             'min': min,
             'abs': abs,
+            'switch': self.builtin_switch,
         }
         self.locals_stack = [{}]
+        self.const_vars = set()  # Traccia quali variabili sono const
     
     def builtin_map(self, iterable, func):
         result = []
@@ -917,6 +1033,28 @@ class Interpreter:
         for item in it:
             acc = self.call_function(func, [acc, item])
         return acc
+    
+    def builtin_switch(self, value, cases, default=None):
+        """
+        Funzione switch - simile a un match/case
+        Uso: switch(valore, {caso1: risultato1, caso2: risultato2, ...}, default)
+        """
+        # Se è una stringa, fai match esatto
+        if isinstance(cases, dict):
+            if value in cases:
+                result = cases[value]
+                # Se il risultato è una funzione, chiamala
+                if callable(result):
+                    return self.call_function(result, [])
+                return result
+        
+        # Se non trova niente, ritorna default
+        if default is not None:
+            if callable(default):
+                return self.call_function(default, [])
+            return default
+        
+        return None
     
     def load_library(self, filepath: str):
         """Carica una libreria da un file .ver"""
@@ -1020,6 +1158,10 @@ class Interpreter:
                 return value
         
         elif isinstance(node, CompoundAssign):
+            # Controlla se è const
+            if node.name in self.const_vars:
+                raise RuntimeError(f"!! Errore: La costante '{node.name}' non può essere modificata")
+            
             # x += 5 diventa x = x + 5
             current_value = None
             for scope in reversed(self.locals_stack):
@@ -1104,6 +1246,11 @@ class Interpreter:
         
         elif isinstance(node, LetStmt):
             value = self.execute(node.value)
+            
+            # Se è const, registra
+            if node.is_const:
+                self.const_vars.add(node.name)
+            
             # Cerca se la variabile esiste già nel closure
             for scope in reversed(self.locals_stack):
                 if node.name in scope:
@@ -1112,6 +1259,29 @@ class Interpreter:
             # Altrimenti crea nel scope corrente
             self.locals_stack[-1][node.name] = value
             return value  # Ritorna il valore assegnato
+        
+        elif isinstance(node, AssignStmt):
+            # Assegnazione a variabile già esistente
+            # Controlla se è const
+            if node.name in self.const_vars:
+                raise RuntimeError(f"!! Errore: La costante '{node.name}' non può essere modificata")
+            
+            value = self.execute(node.value)
+            
+            # Cerca e aggiorna nei scope
+            for scope in reversed(self.locals_stack):
+                if node.name in scope:
+                    scope[node.name] = value
+                    return value
+            
+            # Se non trovata nei locals, prova nei globals
+            if node.name in self.globals:
+                # Le variabili globali non possono essere riassegnate a livello di interprete
+                raise NameError(f"!! Variabile '{node.name}' è globale")
+            
+            # Se non esiste da nessuna parte, crea nel scope corrente
+            self.locals_stack[-1][node.name] = value
+            return value
         
         elif isinstance(node, FnDef):
             # Passa il riferimento allo scope corrente, non una copia
@@ -1166,6 +1336,53 @@ class Interpreter:
         elif isinstance(node, ContinueStmt):
             raise ContinueException()
         
+        elif isinstance(node, ThrowStmt):
+            value = self.execute(node.value)
+            raise VeurekException(str(value))
+        
+        elif isinstance(node, TryStmt):
+            # Esegui try block
+            try:
+                for stmt in node.try_body:
+                    self.execute(stmt)
+            except VeurekException as e:
+                # Cattura errore Veureka
+                if node.catch_body:
+                    # Crea una variabile per l'errore
+                    self.locals_stack.append({})
+                    if node.catch_var:
+                        self.locals_stack[-1][node.catch_var] = str(e)
+                    
+                    try:
+                        for stmt in node.catch_body:
+                            self.execute(stmt)
+                    finally:
+                        self.locals_stack.pop()
+                else:
+                    raise
+            except (BreakException, ContinueException, ReturnException):
+                # Non catturare questi
+                raise
+            except Exception as e:
+                # Cattura altri errori Python
+                if node.catch_body:
+                    self.locals_stack.append({})
+                    if node.catch_var:
+                        self.locals_stack[-1][node.catch_var] = str(e)
+                    
+                    try:
+                        for stmt in node.catch_body:
+                            self.execute(stmt)
+                    finally:
+                        self.locals_stack.pop()
+                else:
+                    raise
+            finally:
+                # Esegui finally block se presente
+                if node.finally_body:
+                    for stmt in node.finally_body:
+                        self.execute(stmt)
+        
         elif isinstance(node, BinaryOp):
             left = self.execute(node.left)
             right = self.execute(node.right)
@@ -1198,6 +1415,13 @@ class Interpreter:
                 return self.is_truthy(left) and self.is_truthy(right)
             elif node.op == 'or':
                 return left if self.is_truthy(left) else right
+            # Bitwise operators
+            elif node.op == '&':
+                return int(left) & int(right)
+            elif node.op == '|':
+                return int(left) | int(right)
+            elif node.op == '^':
+                return int(left) ^ int(right)
         
         elif isinstance(node, UnaryOp):
             operand = self.execute(node.operand)
@@ -1205,6 +1429,8 @@ class Interpreter:
                 return -operand
             elif node.op == 'not':
                 return not self.is_truthy(operand)
+            elif node.op == '~':
+                return ~int(operand)
         
         elif isinstance(node, Call):
             func = self.execute(node.func)
