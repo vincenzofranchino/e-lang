@@ -2,8 +2,10 @@
 
 **Un linguaggio di programmazione moderno, semplice ma potente**
 
-Veureka è un linguaggio interpretato con sintassi pulita che supporta programmazione funzionale, orientata agli oggetti, closures e lambda functions.
 <img width="200" height="200" alt="logo" src="https://github.com/user-attachments/assets/cef0f1c4-dc8d-416c-aaa4-2b4c9289173e" />
+
+Veureka è un linguaggio interpretato con sintassi pulita che supporta programmazione funzionale, orientata agli oggetti, closures e lambda functions.
+
 
 [![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
