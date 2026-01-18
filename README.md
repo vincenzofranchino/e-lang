@@ -350,20 +350,8 @@ print(result)  # 53
 | `map(collection, fn)` | Applica funzione a ogni elemento |
 | `filter(collection, fn)` | Filtra elementi |
 | `reduce(collection, fn, init?)` | Riduce a singolo valore |
-| Funzione | Descrizione |
-|----------|-------------|
-| `print(...)` | Stampa valori |
 | `input()` | Legge input da terminale (ritorna stringa) |
 | `input(prompt)` | Legge input con messaggio |
-| `len(collection)` | Lunghezza di una collezione |
-| `range(start, stop, step?)` | Genera sequenza di numeri |
-| `str(value)` | Converte in stringa |
-| `int(value)` | Converte in intero |
-| `float(value)` | Converte in decimale |
-| `type(value)` | Ritorna il tipo |
-| `map(collection, fn)` | Applica funzione a ogni elemento |
-| `filter(collection, fn)` | Filtra elementi |
-| `reduce(collection, fn, init?)` | Riduce a singolo valore |
 | `sum(collection)` | Somma elementi |
 | `max(collection)` | Valore massimo |
 | `min(collection)` | Valore minimo |
