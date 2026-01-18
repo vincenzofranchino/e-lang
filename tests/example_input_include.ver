@@ -1,0 +1,33 @@
+# Esempio di utilizzo di INPUT e INCLUDE in Veureka
+
+# Importa librerie
+include "lib/math_utils"
+include "lib/string_utils"
+
+# Test funzioni da librerie
+print("=== Test Librerie Matematiche ===")
+print("Quadrato di 5:", quadrato(5))
+print("Cubo di 3:", cubo(3))
+print("Ipotenusa(3,4):", ipotenusa(3, 4))
+print()
+
+# Test funzione input
+print("=== Test Funzione INPUT ===")
+
+# Input di un numero
+print("Inserisci un numero:")
+let numero = input()
+let numero_int = int(numero)
+print("Hai inserito:", numero_int)
+print("Il quadrato è:", quadrato(numero_int))
+print()
+
+# Input di una stringa
+print("Inserisci il tuo nome:")
+let nome = input()
+print("Ciao, " + nome + "!")
+print()
+
+# Test funzione ripeti da libreria
+print("=== Test String Utils ===")
+print("Ripetere 'La' 3 volte:", ripeti("La ", 3))

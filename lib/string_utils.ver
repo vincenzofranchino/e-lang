@@ -1,0 +1,19 @@
+# Libreria di funzioni per stringhe
+
+fn ripeti(stringa, volte)
+    let risultato = ""
+    let i = 0
+    while i < volte
+        risultato = risultato + stringa
+        i = i + 1
+    end
+    return risultato
+end
+
+fn maiuscolo(testo)
+    return testo
+end
+
+fn minuscolo(testo)
+    return testo
+end

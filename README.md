@@ -18,7 +18,9 @@ Veureka è un linguaggio interpretato con sintassi pulita che supporta programma
 - 🔄 **Closures** e funzioni di ordine superiore
 - ⚡ **Operatori compatti** (+=, -=, ++, --)
 - 📦 **Collezioni native** (liste, mappe/dizionari)
-- 🐍 **Implementato in Python puro** (nessuna dipendenza esterna)
+- � **Input/Output interattivo** (input da terminale, print con più argomenti)
+- 📚 **Sistema di librerie** (include per importare file .ver)
+- �🐍 **Implementato in Python puro** (nessuna dipendenza esterna)
 
 ## 📥 Installazione
 
@@ -204,6 +206,38 @@ print(contatore())  # 2
 print(contatore())  # 3
 ```
 
+### Input da Terminale
+```veureka
+print("Inserisci il tuo nome:")
+let nome = input()
+print("Ciao, " + nome + "!")
+
+# Lettura di numeri
+print("Inserisci un numero:")
+let numero = int(input())
+print("Il doppio è:", numero * 2)
+```
+
+### Librerie e Include
+```veureka
+# File: lib/math_utils.ver
+fn quadrato(x)
+    return x * x
+end
+
+fn ipotenusa(a, b)
+    return (a * a + b * b) ** 0.5
+end
+```
+
+```veureka
+# File: main.ver
+include "lib/math_utils"
+
+print("Quadrato di 5:", quadrato(5))
+print("Ipotenusa(3,4):", ipotenusa(3, 4))
+```
+
 ## 🎯 Esempi Completi
 
 ### FizzBuzz
@@ -297,10 +331,47 @@ print(result)  # 53
 | `map(collection, fn)` | Applica funzione a ogni elemento |
 | `filter(collection, fn)` | Filtra elementi |
 | `reduce(collection, fn, init?)` | Riduce a singolo valore |
+| Funzione | Descrizione |
+|----------|-------------|
+| `print(...)` | Stampa valori |
+| `input()` | Legge input da terminale (ritorna stringa) |
+| `input(prompt)` | Legge input con messaggio |
+| `len(collection)` | Lunghezza di una collezione |
+| `range(start, stop, step?)` | Genera sequenza di numeri |
+| `str(value)` | Converte in stringa |
+| `int(value)` | Converte in intero |
+| `float(value)` | Converte in decimale |
+| `type(value)` | Ritorna il tipo |
+| `map(collection, fn)` | Applica funzione a ogni elemento |
+| `filter(collection, fn)` | Filtra elementi |
+| `reduce(collection, fn, init?)` | Riduce a singolo valore |
 | `sum(collection)` | Somma elementi |
 | `max(collection)` | Valore massimo |
 | `min(collection)` | Valore minimo |
 | `abs(number)` | Valore assoluto |
+
+### Statement Speciali
+```veureka
+# Include - Importa una libreria
+include "lib/math_utils"
+include("string_utils")    # Entrambe le sintassi sono valide
+
+# Break - Esce da un ciclo
+for i in range(1, 100)
+    if i == 10
+        break
+    end
+    print(i)
+end
+
+# Continue - Salta all'iterazione successiva
+for i in range(1, 11)
+    if i % 2 != 0
+        continue
+    end
+    print(i)  # Stampa solo numeri pari
+end
+```
 
 ## 🛠️ Uso del REPL
 
@@ -392,15 +463,17 @@ print(p.distanza())  # 7.07...
 
 ## 🎯 Roadmap
 
-- [ ] Import/Export di moduli
+- [x] ✅ Input da terminale
+- [x] ✅ Sistema di librerie (include)
 - [ ] Gestione eccezioni (try/catch/finally)
 - [ ] Ereditarietà tra classi
 - [ ] Decoratori
 - [ ] Generatori e iteratori custom
 - [ ] Comprensione liste `[x * 2 for x in range(10)]`
-- [ ] Pattern matching avanzato
+- [ ] Pattern matching avanzato (match/case migliorato)
 - [ ] Type hints opzionali
 - [ ] Package manager
+- [ ] Moduli con namespace
 
 ## 🤝 Contribuire
 

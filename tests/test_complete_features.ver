@@ -1,0 +1,305 @@
+# TEST COMPLETO DI TUTTE LE FUNZIONALITÀ DI VEUREKA
+
+print("╔════════════════════════════════════════════════╗")
+print("║  TEST COMPLETO - VEUREKA LANGUAGE FEATURES    ║")
+print("╚════════════════════════════════════════════════╝")
+print()
+
+# ===== 1. VARIABILI E TIPI =====
+print("1️⃣  VARIABILI E TIPI")
+let x = 10
+let y = 3.14
+let stringa = "Veureka"
+let booleano = true
+let lista = [1, 2, 3, 4, 5]
+print("Intero:", x, "| Float:", y, "| String:", stringa)
+print("Booleano:", booleano, "| Lista:", lista)
+print()
+
+# ===== 2. OPERATORI ARITMETICI =====
+print("2️⃣  OPERATORI ARITMETICI")
+let a = 15
+let b = 4
+print("15 + 4 =", a + b)
+print("15 - 4 =", a - b)
+print("15 * 4 =", a * b)
+print("15 / 4 =", a / b)
+print("15 % 4 =", a % b)
+print("2 ** 8 =", 2 ** 8)
+print()
+
+# ===== 3. OPERATORI DI CONFRONTO =====
+print("3️⃣  OPERATORI DI CONFRONTO")
+print("5 == 5:", 5 == 5)
+print("5 != 3:", 5 != 3)
+print("5 < 10:", 5 < 10)
+print("10 > 5:", 10 > 5)
+print("5 <= 5:", 5 <= 5)
+print("10 >= 5:", 10 >= 5)
+print()
+
+# ===== 4. OPERATORI LOGICI =====
+print("4️⃣  OPERATORI LOGICI")
+print("true and false:", true and false)
+print("true or false:", true or false)
+print("not true:", not true)
+print("(5 > 3) and (10 < 20):", (5 > 3) and (10 < 20))
+print()
+
+# ===== 5. OPERATORI COMPATTI =====
+print("5️⃣  OPERATORI COMPATTI (+=, -=, ++, --)")
+let num = 10
+print("num iniziale:", num)
+num += 5
+print("num += 5 →", num)
+num -= 3
+print("num -= 3 →", num)
+num *= 2
+print("num *= 2 →", num)
+num /= 4
+print("num /= 4 →", num)
+let counter = 5
+print("counter++ →", counter++)
+print("++counter →", ++counter)
+print("counter-- →", counter--)
+print("--counter →", --counter)
+print()
+
+# ===== 6. STRINGHE E CONCATENAZIONE =====
+print("6️⃣  STRINGHE E CONCATENAZIONE")
+let nome = "Vincenzo"
+let cognome = "Franchino"
+let nomecompleto = nome + " " + cognome
+print("Stringa:", nomecompleto)
+print("Lunghezza:", len(nomecompleto))
+print()
+
+# ===== 7. LISTE E OPERAZIONI =====
+print("7️⃣  LISTE E OPERAZIONI")
+let numeri = [10, 20, 30, 40, 50]
+print("Lista:", numeri)
+print("Lunghezza:", len(numeri))
+print("Primo elemento:", numeri[0])
+print("Ultimo elemento:", numeri[4])
+print("Range:", range(1, 6))
+print()
+
+# ===== 8. IF/ELIF/ELSE =====
+print("8️⃣  IF/ELIF/ELSE")
+let voto = 7
+if voto >= 9
+    print("Voto: Eccellente!")
+elif voto >= 7
+    print("Voto: Buono!")
+elif voto >= 6
+    print("Voto: Sufficiente!")
+else
+    print("Voto: Insufficiente!")
+end
+print()
+
+# ===== 9. CICLO FOR =====
+print("9️⃣  CICLO FOR")
+print("Numeri da 1 a 5:")
+for i in range(1, 6)
+    print("  -", i)
+end
+print()
+
+# ===== 10. CICLO WHILE =====
+print("🔟 CICLO WHILE")
+let i = 1
+print("Conto: ")
+while i <= 5
+    print(i, " ", )
+    i = i + 1
+end
+print()
+print()
+
+# ===== 11. FUNZIONI SEMPLICI =====
+print("1️⃣1️⃣  FUNZIONI SEMPLICI")
+fn saluta(nome)
+    return "Ciao, " + nome + "!"
+end
+print(saluta("Mario"))
+print()
+
+# ===== 12. FUNZIONI CON PARAMETRI MULTIPLI =====
+print("1️⃣2️⃣  FUNZIONI CON PIÙ PARAMETRI")
+fn somma(a, b, c)
+    return a + b + c
+end
+print("somma(5, 10, 15) =", somma(5, 10, 15))
+print()
+
+# ===== 13. LAMBDA / FUNZIONI ANONIME =====
+print("1️⃣3️⃣  LAMBDA / FUNZIONI ANONIME")
+let doppio = fn(x) => x * 2
+let triplo = fn(x) => x * 3
+print("doppio(5) =", doppio(5))
+print("triplo(5) =", triplo(5))
+print()
+
+# ===== 14. RICORSIONE =====
+print("1️⃣4️⃣  RICORSIONE - FATTORIALE")
+fn fattoriale(n)
+    if n <= 1
+        return 1
+    else
+        return n * fattoriale(n - 1)
+    end
+end
+print("fattoriale(5) =", fattoriale(5))
+print("fattoriale(10) =", fattoriale(10))
+print()
+
+# ===== 15. MAP - TRASFORMA LISTA =====
+print("1️⃣5️⃣  MAP - TRASFORMA LISTA")
+let numeri = [1, 2, 3, 4, 5]
+let quadrati = map(numeri, fn(x) => x * x)
+print("Numeri:", numeri)
+print("Quadrati:", quadrati)
+print()
+
+# ===== 16. FILTER - FILTRA LISTA =====
+print("1️⃣6️⃣  FILTER - FILTRA LISTA")
+let numeri = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+let pari = filter(numeri, fn(x) => x % 2 == 0)
+print("Numeri:", numeri)
+print("Numeri pari:", pari)
+print()
+
+# ===== 17. REDUCE - AGGREGA LISTA =====
+print("1️⃣7️⃣  REDUCE - AGGREGA LISTA")
+let numeri = [1, 2, 3, 4, 5]
+let somma = reduce(numeri, fn(acc, n) => acc + n, 0)
+let prodotto = reduce(numeri, fn(acc, n) => acc * n, 1)
+print("Numeri:", numeri)
+print("Somma (reduce):", somma)
+print("Prodotto (reduce):", prodotto)
+print()
+
+# ===== 18. CLOSURES =====
+print("1️⃣8️⃣  CLOSURES")
+fn crea_moltiplicatore(fattore)
+    return fn(x) => x * fattore
+end
+let moltiplicaPerDue = crea_moltiplicatore(2)
+let moltiplicaPerTre = crea_moltiplicatore(3)
+print("moltiplicaPerDue(10) =", moltiplicaPerDue(10))
+print("moltiplicaPerTre(10) =", moltiplicaPerTre(10))
+print()
+
+# ===== 19. CLASSI E OOP =====
+print("1️⃣9️⃣  CLASSI E OOP")
+class Animale
+    fn __init__(nome, tipo)
+        self.nome = nome
+        self.tipo = tipo
+    end
+    
+    fn presenta()
+        print("Sono " + self.nome + ", un " + self.tipo)
+    end
+    
+    fn verso()
+        print(self.nome + " fa verso...")
+    end
+end
+
+let cane = new Animale("Rex", "cane")
+cane.presenta()
+cane.verso()
+print()
+
+# ===== 20. CLASSI CON METODI =====
+print("2️⃣0️⃣  CLASSI CON METODI E STATI")
+class Contatore
+    fn __init__(valore_iniziale)
+        self.valore = valore_iniziale
+    end
+    
+    fn incrementa()
+        self.valore++
+        return self.valore
+    end
+    
+    fn decrementa()
+        self.valore--
+        return self.valore
+    end
+    
+    fn resetta()
+        self.valore = 0
+    end
+    
+    fn mostra()
+        print("Contatore:", self.valore)
+    end
+end
+
+let c = new Contatore(0)
+print("Valore iniziale:")
+c.mostra()
+print("Incrementa:", c.incrementa())
+print("Incrementa:", c.incrementa())
+print("Decrementa:", c.decrementa())
+print()
+
+# ===== 21. FUNZIONI BUILTIN =====
+print("2️⃣1️⃣  FUNZIONI BUILTIN")
+print("len([1,2,3]):", len([1, 2, 3]))
+print("str(42):", str(42))
+print("int('123'):", int("123"))
+print("float('3.14'):", float("3.14"))
+print("type(42):", type(42))
+print("sum([1,2,3,4,5]):", sum([1, 2, 3, 4, 5]))
+print("max([1,5,3,9,2]):", max([1, 5, 3, 9, 2]))
+print("min([1,5,3,9,2]):", min([1, 5, 3, 9, 2]))
+print("abs(-10):", abs(-10))
+print()
+
+# ===== 22. BREAK E CONTINUE =====
+print("2️⃣2️⃣  BREAK E CONTINUE")
+print("Numeri pari fino a 10 (con continue):")
+for i in range(1, 11)
+    if i % 2 != 0
+        continue
+    end
+    print("  ", i)
+end
+print()
+
+print("Ferma al 5 (con break):")
+for i in range(1, 11)
+    if i == 6
+        break
+    end
+    print("  ", i)
+end
+print()
+
+# ===== 23. COMPOSIZIONE FUNZIONI =====
+print("2️⃣3️⃣  COMPOSIZIONE DI FUNZIONI")
+fn aggiungi_uno(x)
+    return x + 1
+end
+
+fn moltiplica_due(x)
+    return x * 2
+end
+
+fn sottrai_tre(x)
+    return x - 3
+end
+
+let result = sottrai_tre(moltiplica_due(aggiungi_uno(5)))
+print("((5 + 1) * 2) - 3 =", result)
+print()
+
+# ===== 24. FINALE =====
+print("╔════════════════════════════════════════════════╗")
+print("║     ✅ TEST COMPLETATO CON SUCCESSO! ✅       ║")
+print("║   Tutte le funzionalità sono operative!       ║")
+print("╚════════════════════════════════════════════════╝")

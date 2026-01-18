@@ -10,7 +10,6 @@ Uso:
 
 import sys
 import re
-import os
 from enum import Enum, auto
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Callable
@@ -42,7 +41,6 @@ class TT(Enum):
     AND = auto()
     OR = auto()
     NOT = auto()
-    INCLUDE = auto()
     
     # Literals
     NUMBER = auto()
@@ -108,7 +106,7 @@ class Lexer:
             'return': TT.RETURN, 'break': TT.BREAK, 'continue': TT.CONTINUE,
             'match': TT.MATCH, 'case': TT.CASE, 'end': TT.END,
             'true': TT.TRUE, 'false': TT.FALSE, 'nil': TT.NIL,
-            'and': TT.AND, 'or': TT.OR, 'not': TT.NOT, 'include': TT.INCLUDE
+            'and': TT.AND, 'or': TT.OR, 'not': TT.NOT
         }
     
     def tokenize(self) -> List[Token]:
@@ -319,10 +317,6 @@ class Program(Node):
     statements: List[Node]
 
 @dataclass
-class IncludeStmt(Node):
-    path: str
-
-@dataclass
 class LetStmt(Node):
     name: str
     value: Node
@@ -447,9 +441,7 @@ class Parser:
         return Program(statements)
     
     def parse_statement(self) -> Node:
-        if self.match(TT.INCLUDE):
-            return self.parse_include()
-        elif self.match(TT.LET):
+        if self.match(TT.LET):
             return self.parse_let()
         elif self.match(TT.FN):
             return self.parse_function()
@@ -469,17 +461,6 @@ class Parser:
             return ContinueStmt()
         else:
             return self.parse_expression()
-    
-    def parse_include(self) -> IncludeStmt:
-        # include può essere sia include "path" che include("path")
-        if self.check(TT.STRING):
-            path = self.consume(TT.STRING).value
-        elif self.match(TT.LPAREN):
-            path = self.consume(TT.STRING).value
-            self.consume(TT.RPAREN)
-        else:
-            raise Exception("Expected file path after 'include'")
-        return IncludeStmt(path)
     
     def parse_class(self) -> ClassDef:
         name = self.consume(TT.IDENT).value
@@ -918,48 +899,6 @@ class Interpreter:
             acc = self.call_function(func, [acc, item])
         return acc
     
-    def load_library(self, filepath: str):
-        """Carica una libreria da un file .ver"""
-        # Gestisci estensioni con .ver o senza
-        if not filepath.endswith('.ver'):
-            filepath_with_ext = filepath + '.ver'
-        else:
-            filepath_with_ext = filepath
-        
-        # Cerca il file nella cartella corrente o nelle cartelle standard
-        search_paths = [
-            filepath_with_ext,
-            os.path.join(os.getcwd(), filepath_with_ext),
-            os.path.join(os.path.dirname(__file__), 'lib', filepath_with_ext),
-        ]
-        
-        file_path = None
-        for path in search_paths:
-            if os.path.exists(path):
-                file_path = path
-                break
-        
-        if not file_path:
-            raise FileNotFoundError(f"!! Libreria '{filepath}' non trovata. Cercato in: {search_paths}")
-        
-        # Leggi e esegui il file
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                source = f.read()
-            
-            # Tokenizza, analizza ed esegui
-            lexer = Lexer(source)
-            tokens = lexer.tokenize()
-            parser = Parser(tokens)
-            program = parser.parse()
-            
-            # Esegui il programma della libreria nel contesto globale
-            for stmt in program.statements:
-                self.execute(stmt)
-                
-        except Exception as e:
-            raise RuntimeError(f"!! Errore nel caricamento della libreria '{filepath}': {e}")
-    
     def run(self, program: Program):
         for stmt in program.statements:
             self.execute(stmt)
@@ -968,10 +907,6 @@ class Interpreter:
         if isinstance(node, Program):
             for stmt in node.statements:
                 self.execute(stmt)
-        
-        elif isinstance(node, IncludeStmt):
-            # Carica una libreria da file
-            self.load_library(node.path)
         
         elif isinstance(node, ClassDef):
             # Converti i metodi in VerFunction

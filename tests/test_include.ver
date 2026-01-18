@@ -1,0 +1,6 @@
+# Test semplice di include
+include "lib/math_utils"
+
+print("Quadrato di 7:", quadrato(7))
+print("Cubo di 2:", cubo(2))
+print("Ipotenusa(5,12):", ipotenusa(5, 12))

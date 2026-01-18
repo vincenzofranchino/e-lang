@@ -1,0 +1,17 @@
+# Libreria di funzioni matematiche per Veureka
+
+fn quadrato(x)
+    return x * x
+end
+
+fn cubo(x)
+    return x * x * x
+end
+
+fn somma_quadrati(a, b)
+    return quadrato(a) + quadrato(b)
+end
+
+fn ipotenusa(a, b)
+    return (somma_quadrati(a, b)) ** 0.5
+end

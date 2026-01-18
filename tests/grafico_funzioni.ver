@@ -1,0 +1,192 @@
+# PLOTTER DI FUNZIONI MATEMATICHE IN ASCII ART
+
+# Funzione per disegnare una parabola y = x^2
+fn disegna_parabola()
+    print("=== PARABOLA: y = x^2 ===")
+    print()
+    
+    # Definiamo l'altezza e larghezza del grafico
+    let altezza = 15
+    let larghezza = 40
+    
+    # Asse Y
+    for y in range(0, altezza)
+        let riga = ""
+        
+        # Asse X (linea orizzontale)
+        if y == altezza - 1
+            riga = "+"
+            for x in range(0, larghezza)
+                riga = riga + "-"
+            end
+        # Asse Y (linea verticale)
+        elif y == 0
+            riga = "|"
+            # Stampa i valori della funzione
+            for x in range(0, larghezza)
+                let x_val = x - larghezza / 2
+                let y_val = x_val * x_val / 3  # Scalato
+                
+                if y_val == y - 7
+                    riga = riga + "*"
+                else
+                    riga = riga + " "
+                end
+            end
+        else
+            riga = "|"
+            for x in range(0, larghezza)
+                let x_val = x - larghezza / 2
+                let y_val = (x_val * x_val) / 3  # Scalato
+                
+                # Se il valore della funzione corrisponde a questa riga
+                if y_val >= (altezza - y - 2) and y_val < (altezza - y - 1)
+                    riga = riga + "*"
+                else
+                    riga = riga + " "
+                end
+            end
+        end
+        
+        print(riga)
+    end
+    print()
+end
+
+# Funzione per disegnare una linea semplice
+fn disegna_linea()
+    print("=== LINEA RETTA: y = 0.5x + 2 ===")
+    print()
+    
+    let altezza = 10
+    let larghezza = 30
+    
+    for y in range(0, altezza)
+        let riga = ""
+        
+        # Base del grafico
+        if y == altezza - 1
+            riga = "+"
+            for x in range(0, larghezza)
+                riga = riga + "-"
+            end
+        else
+            riga = "|"
+            for x in range(0, larghezza)
+                # y = 0.5x + 2
+                let y_val = x / 2 + 2
+                
+                if y_val >= (altezza - y - 2) and y_val < (altezza - y - 1)
+                    riga = riga + "*"
+                else
+                    riga = riga + " "
+                end
+            end
+        end
+        
+        print(riga)
+    end
+    print()
+end
+
+# Funzione per disegnare un triangolo
+fn disegna_triangolo()
+    print("=== TRIANGOLO ===")
+    print()
+    
+    for i in range(1, 11)
+        let riga = ""
+        
+        # Spazi iniziali per centrare
+        let spazi = 10 - i
+        for s in range(0, spazi)
+            riga = riga + " "
+        end
+        
+        # Asterischi
+        for a in range(0, 2 * i - 1)
+            riga = riga + "*"
+        end
+        
+        print(riga)
+    end
+    print()
+end
+
+# Funzione per disegnare un diamante
+fn disegna_diamante()
+    print("=== DIAMANTE ===")
+    print()
+    
+    let n = 7
+    
+    # Prima metà
+    for i in range(1, n + 1)
+        let riga = ""
+        
+        for s in range(0, n - i)
+            riga = riga + " "
+        end
+        
+        for a in range(0, 2 * i - 1)
+            riga = riga + "*"
+        end
+        
+        print(riga)
+    end
+    
+    # Seconda metà
+    for i in range(n - 1, 0)
+        let riga = ""
+        
+        for s in range(0, n - i)
+            riga = riga + " "
+        end
+        
+        for a in range(0, 2 * i - 1)
+            riga = riga + "*"
+        end
+        
+        print(riga)
+    end
+    print()
+end
+
+# Funzione per disegnare una piramide
+fn disegna_piramide()
+    print("=== PIRAMIDE ===")
+    print()
+    
+    for i in range(1, 11)
+        let riga = ""
+        
+        # Spazi
+        for s in range(0, 10 - i)
+            riga = riga + " "
+        end
+        
+        # Asterischi
+        for a in range(0, i)
+            riga = riga + "*"
+        end
+        
+        print(riga)
+    end
+    print()
+end
+
+# MAIN - Esegui tutti i disegni
+print("╔════════════════════════════════════════════╗")
+print("║   PLOTTER ASCII ART - FUNZIONI GRAFICHE   ║")
+print("╚════════════════════════════════════════════╝")
+print()
+
+disegna_piramide()
+disegna_diamante()
+disegna_triangolo()
+disegna_linea()
+disegna_parabola()
+
+print("╔════════════════════════════════════════════╗")
+print("║         GRAFICO COMPLETATO! ✅            ║")
+print("╚════════════════════════════════════════════╝")
