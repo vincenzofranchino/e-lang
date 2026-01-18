@@ -1260,6 +1260,7 @@ def repl():
     print("=" * 60)
     print("Digita 'exit' o 'quit' per uscire")
     print("Digita 'help' per vedere i comandi disponibili")
+    print("Versione 0.0.1")
     print()
     
     interpreter = Interpreter()
