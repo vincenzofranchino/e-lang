@@ -1,4 +1,4 @@
-# Esempio di utilizzo di INPUT e INCLUDE in Veureka
+# Esempio di utilizzo di INPUT e INCLUDE in Elang
 
 # Importa librerie
 include "lib/math"

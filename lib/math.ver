@@ -1,4 +1,4 @@
-# Libreria di funzioni matematiche per Veureka
+# Math Library
 
 const PI = 3.14159265358979323846
 const e_const = 2.71828

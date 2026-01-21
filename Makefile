@@ -1,11 +1,11 @@
 .PHONY: all build clean install installpython uninstall test
-APP_NAME = veureka
-SRC_C = veureka.c
-SRC_PY = veureka.py
+APP_NAME = elang
+SRC_C = elang.c
+SRC_PY = elang.py
 
 all:
 	@echo "=============================================================="
-	@echo "Veureka - Linguaggio di Programmazione"
+	@echo "Elang - Linguaggio di Programmazione"
 	@echo "========================================="
 	@echo "Comandi disponibili:"
 	@echo "  make build        - Compila la versione C"
@@ -17,8 +17,8 @@ all:
 	@echo "  make clean        - Rimuove i file di build"
 	@echo ""
 	@echo "Per eseguire:"
-	@echo "  ./veureka script.ver    # Versione C compilata"
-	@echo "  python veureka.py       # Versione Python"
+	@echo "  ./elang script.ver    # Versione C compilata"
+	@echo "  python elang.py       # Versione Python"
 	@echo ""
 	@echo "Nota: PyInstaller è richiesto per 'make python' e 'make installpython'"
 
@@ -50,8 +50,8 @@ installpython: python
 	@echo "✓ Installato Python in /usr/local/bin/$(APP_NAME)"
 
 test: build
-	@echo "Testing Veureka C implementation..."
-	@echo 'print("Hello from Veureka!")' | ./$(APP_NAME)
+	@echo "Testing Elang C implementation..."
+	@echo 'print("Hello from Elang!")' | ./$(APP_NAME)
 	@echo ""
 	@echo 'let x = 10\nprint("x =", x)' | ./$(APP_NAME)
 

@@ -1,7 +1,7 @@
-# TEST COMPLETO DI TUTTE LE FUNZIONALITÀ DI VEUREKA
+# TEST COMPLETO DI TUTTE LE FUNZIONALITÀ DI Elang
 
 print("╔════════════════════════════════════════════════╗")
-print("║  TEST COMPLETO - VEUREKA LANGUAGE FEATURES    ║")
+print("║  TEST COMPLETO - Elang LANGUAGE FEATURES    ║")
 print("╚════════════════════════════════════════════════╝")
 print()
 
@@ -9,7 +9,7 @@ print()
 print("1️⃣  VARIABILI E TIPI")
 let x = 10
 let y = 3.14
-let stringa = "Veureka"
+let stringa = "Elang"
 let booleano = true
 let lista = [1, 2, 3, 4, 5]
 print("Intero:", x, "| Float:", y, "| String:", stringa)

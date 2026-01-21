@@ -1,10 +1,10 @@
-# 🚀 Veureka
+# 🚀 E-lang
 
 **Un linguaggio di programmazione moderno, semplice ma potente**
 
 <img width="200" height="200" alt="logo" src="https://github.com/user-attachments/assets/cef0f1c4-dc8d-416c-aaa4-2b4c9289173e" />
 
-Veureka è un linguaggio interpretato con sintassi pulita che supporta programmazione funzionale, orientata agli oggetti, closures e lambda functions.
+E è un linguaggio interpretato con sintassi pulita che supporta programmazione funzionale, orientata agli oggetti, closures e lambda functions.
 
 
 [![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/)
@@ -27,23 +27,23 @@ Veureka è un linguaggio interpretato con sintassi pulita che supporta programma
 ### Opzione 1: Usa Python direttamente
 ```bash
 # Clone del repository
-git clone https://github.com/vincenzofranchino/veureka-lang.git
-cd veureka-lang
+git clone https://github.com/vincenzofranchino/e-lang.git
+cd e-lang
 
 # Esegui direttamente
-python veurekabeta.py script.ver
+python elang.py script.ver
 ```
 
 ### Opzione 2: Installa come comando di sistema (Linux)
 ```bash
-git clone https://github.com/vincenzofranchino/veureka-lang.git
-cd veureka-lang
+git clone https://github.com/vincenzofranchino/e-lang.git
+cd e-lang
 
 sudo make build
 sudo make install
 
 # Adesso puoi usare da qualsiasi directory:
-veureka script.ver
+elang script.ver
 
 # Per disinstallare:
 make clean
@@ -52,42 +52,42 @@ make clean
 ## 🚀 Quick Start
 
 ### Hello World
-```veureka
+```e-lang
 print("Ciao, mondo!")
 ```
 
 ### Eseguire un file
 ```bash
-python veurekabeta.py hello.ver
+python elang.py hello.ver
 # oppure (se installato)
-veureka hello.ver
+elang hello.ver
 ```
 
 ### REPL Interattivo
 ```bash
-python veurekabeta.py
+python elang.py
 # oppure (se installato)
-veureka
+elang
 ```
 
 ### Esempi dimostrativi
 ```bash
-python veurekabeta.py --examples
+python elang.py --examples
 # oppure
-veureka --examples
+elang --examples
 ```
 
 ## 📖 Sintassi di Base
 
 ### Variabili
-```veureka
+```elang
 let nome = "Mario"
 let età = 25
 let pi = 3.14159
 ```
 
 ### Funzioni
-```veureka
+```elang
 fn saluta(nome)
     print("Ciao, " + nome + "!")
 end
@@ -96,7 +96,7 @@ saluta("Alice")
 ```
 
 ### Lambda Functions
-```veureka
+```elang
 let doppio = fn(x) => x * 2
 let somma = fn(a, b) => a + b
 
@@ -105,7 +105,7 @@ print(somma(3, 7))   # 10
 ```
 
 ### Strutture di Controllo
-```veureka
+```elang
 # If-Elif-Else
 if x > 10
     print("Grande")
@@ -129,7 +129,7 @@ end
 ```
 
 ### Classi e OOP
-```veureka
+```elang
 class Persona
     fn __init__(nome, età)
         self.nome = nome
@@ -151,7 +151,7 @@ mario.compleanno()
 ```
 
 ### Operatori Compatti
-```veureka
+```elang
 let x = 10
 
 x += 5    # x = 15
@@ -169,7 +169,7 @@ x--       # postfisso
 ### Collezioni
 
 #### Liste
-```veureka
+```elang
 let numeri = [1, 2, 3, 4, 5]
 
 for n in numeri
@@ -181,7 +181,7 @@ print(numeri[0])      # 1
 ```
 
 #### Mappe/Dizionari
-```veureka
+```elang
 let utente = {
     nome: "Alice",
     età: 30,
@@ -192,7 +192,7 @@ print(utente["nome"])    # "Alice"
 ```
 
 ### Funzioni di Ordine Superiore
-```veureka
+```elang
 let numeri = [1, 2, 3, 4, 5]
 
 # Map
@@ -209,7 +209,7 @@ print(somma)  # 15
 ```
 
 ### Closures
-```veureka
+```elang
 fn crea_contatore()
     let count = 0
     return fn() => count = count + 1
@@ -222,7 +222,7 @@ print(contatore())  # 3
 ```
 
 ### Input da Terminale
-```veureka
+```elang
 print("Inserisci il tuo nome:")
 let nome = input()
 print("Ciao, " + nome + "!")
@@ -234,7 +234,7 @@ print("Il doppio è:", numero * 2)
 ```
 
 ### Librerie e Include
-```veureka
+```elang
 # File: lib/math_utils.ver
 fn quadrato(x)
     return x * x
@@ -245,7 +245,7 @@ fn ipotenusa(a, b)
 end
 ```
 
-```veureka
+```elang
 # File: main.ver
 include "lib/math_utils"
 
@@ -256,7 +256,7 @@ print("Ipotenusa(3,4):", ipotenusa(3, 4))
 ## 🎯 Esempi Completi
 
 ### FizzBuzz
-```veureka
+```elang
 for i in range(1, 101)
     if i % 15 == 0
         print("FizzBuzz")
@@ -271,7 +271,7 @@ end
 ```
 
 ### Fibonacci Ricorsivo
-```veureka
+```elang
 fn fibonacci(n)
     if n < 2
         return n
@@ -283,7 +283,7 @@ print(fibonacci(10))  # 55
 ```
 
 ### Classe Contatore
-```veureka
+```elang
 class Contatore
     fn __init__(valore)
         self.valore = valore
@@ -306,7 +306,7 @@ c.reset()
 ```
 
 ### Calcolatrice con Method Chaining
-```veureka
+```elang
 class Calc
     fn __init__()
         self.risultato = 0
@@ -354,7 +354,7 @@ print(result)  # 53
 | `abs(number)` | Valore assoluto |
 
 ### Statement Speciali
-```veureka
+```elang
 # Include - Importa una libreria
 include "lib/math_utils"
 include("string_utils")    # Entrambe le sintassi sono valide
@@ -379,9 +379,9 @@ end
 ## 🛠️ Uso del REPL
 
 ```bash
-$ python veurekabeta.py
+$ python elang.py
 ============================================================
-Veureka REPL - Linguaggio di Programmazione Interattivo
+Elang REPL - Linguaggio di Programmazione Interattivo
 ============================================================
 Digita 'exit' o 'quit' per uscire
 Digita 'help' per vedere i comandi disponibili
@@ -409,7 +409,7 @@ Arrivederci!
 - `vars` - Mostra tutte le variabili definite
 
 ### TodoList con Classe
-```veureka
+```elang
 class TodoList
     fn __init__()
         self.tasks = []
@@ -433,13 +433,13 @@ class TodoList
 end
 
 let todo = new TodoList()
-todo.add("Studiare Veureka")
+todo.add("Studiare Elang")
 todo.add("Scrivere codice")
 todo.show()
 ```
 
 ### Punto 2D con Metodi
-```veureka
+```elang
 class Punto
     fn __init__(x, y)
         self.x = x

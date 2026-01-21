@@ -1,22 +1,16 @@
 #!/usr/bin/env python3
 """
-Veureka - Un linguaggio di programmazione moderno, semplice ma potente.
+Elang - Un linguaggio di programmazione moderno, semplice ma potente.
 
 Uso:
-    python veureka.py script.ver          # Esegue un file
-    python veureka.py -c script.ver       # Compila a eseguibile
-    python veureka.py -c script.ver -o app # Specifica nome output
-    python veureka.py                      # Avvia REPL interattivo
-    python veureka.py --examples           # Esegue gli esempi
+    python elang.py script.ver          # Esegue un file
+    python elang.py                      # Avvia REPL interattivo
+    python elang.py --examples           # Esegue gli esempi
 """
 
 import sys
 import re
 import os
-import subprocess
-import shutil
-import base64
-from pathlib import Path
 from enum import Enum, auto
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Callable
@@ -26,6 +20,7 @@ from typing import Any, Dict, List, Optional, Callable
 class TT(Enum):
     # Keywords
     LET = auto()
+    CONST = auto()
     FN = auto()
     CLASS = auto()
     NEW = auto()
@@ -49,6 +44,22 @@ class TT(Enum):
     OR = auto()
     NOT = auto()
     INCLUDE = auto()
+    TRY = auto()
+    CATCH = auto()
+    FINALLY = auto()
+    THROW = auto()
+    
+    # Bitwise operators
+    AMPERSAND = auto()
+    PIPE = auto()
+    CARET = auto()
+    TILDE = auto()
+    LSHIFT = auto()
+    RSHIFT = auto()
+    
+    # Logical operators
+    LOGICAL_AND = auto()
+    LOGICAL_OR = auto()
     
     # Literals
     NUMBER = auto()
@@ -112,9 +123,11 @@ class Lexer:
             'self': TT.SELF, 'if': TT.IF, 'elif': TT.ELIF,
             'else': TT.ELSE, 'for': TT.FOR, 'in': TT.IN, 'while': TT.WHILE,
             'return': TT.RETURN, 'break': TT.BREAK, 'continue': TT.CONTINUE,
+            'const': TT.CONST, 'let': TT.LET,
             'match': TT.MATCH, 'case': TT.CASE, 'end': TT.END,
             'true': TT.TRUE, 'false': TT.FALSE, 'nil': TT.NIL,
-            'and': TT.AND, 'or': TT.OR, 'not': TT.NOT, 'include': TT.INCLUDE
+            'and': TT.AND, 'or': TT.OR, 'not': TT.NOT, 'include': TT.INCLUDE,
+            'try': TT.TRY, 'catch': TT.CATCH, 'finally': TT.FINALLY, 'throw': TT.THROW,
         }
     
     def tokenize(self) -> List[Token]:
@@ -196,6 +209,8 @@ class Lexer:
                 if self.peek() == '=':
                     self.advance()
                     tokens.append(self.make_token(TT.NE, '!='))
+                else:
+                    tokens.append(self.make_token(TT.NOT, '!'))
             elif char == '<':
                 if self.peek() == '=':
                     self.advance()
@@ -227,6 +242,23 @@ class Lexer:
                 tokens.append(self.make_token(TT.COLON, ':'))
             elif char == '.':
                 tokens.append(self.make_token(TT.DOT, '.'))
+            # Bitwise operators
+            elif char == '&':
+                if self.peek() == '&':
+                    self.advance()
+                    tokens.append(self.make_token(TT.LOGICAL_AND, '&&'))
+                else:
+                    tokens.append(self.make_token(TT.AMPERSAND, '&'))
+            elif char == '|':
+                if self.peek() == '|':
+                    self.advance()
+                    tokens.append(self.make_token(TT.LOGICAL_OR, '||'))
+                else:
+                    tokens.append(self.make_token(TT.PIPE, '|'))
+            elif char == '^':
+                tokens.append(self.make_token(TT.CARET, '^'))
+            elif char == '~':
+                tokens.append(self.make_token(TT.TILDE, '~'))
             else:
                 raise SyntaxError(f"!! Carattere inaspettato '{char}' alla riga {self.line}:{self.col}")
         
@@ -330,6 +362,12 @@ class IncludeStmt(Node):
 
 @dataclass
 class LetStmt(Node):
+    name: str
+    value: Node
+    is_const: bool = False
+
+@dataclass
+class AssignStmt(Node):
     name: str
     value: Node
 
@@ -439,6 +477,17 @@ class IncrementDecrement(Node):
 class MapLit(Node):
     pairs: List[tuple]  # [(key, value), ...]
 
+@dataclass
+class TryStmt(Node):
+    try_body: List[Node]
+    catch_var: Optional[str]  # Nome della variabile che contiene l'errore
+    catch_body: Optional[List[Node]]
+    finally_body: Optional[List[Node]]
+
+@dataclass
+class ThrowStmt(Node):
+    value: Node
+
 # ============ PARSER ============
 
 class Parser:
@@ -455,7 +504,8 @@ class Parser:
     def parse_statement(self) -> Node:
         if self.match(TT.INCLUDE):
             return self.parse_include()
-        elif self.match(TT.LET):
+        elif self.match(TT.LET, TT.CONST):
+            self.pos -= 1  # Ritorna indietro
             return self.parse_let()
         elif self.match(TT.FN):
             return self.parse_function()
@@ -467,6 +517,10 @@ class Parser:
             return self.parse_for()
         elif self.match(TT.WHILE):
             return self.parse_while()
+        elif self.match(TT.TRY):
+            return self.parse_try()
+        elif self.match(TT.THROW):
+            return self.parse_throw()
         elif self.match(TT.RETURN):
             return self.parse_return()
         elif self.match(TT.BREAK):
@@ -501,10 +555,13 @@ class Parser:
         return ClassDef(name, methods)
     
     def parse_let(self) -> LetStmt:
+        is_const = self.match(TT.CONST)
+        if not is_const:
+            self.consume(TT.LET)
         name = self.consume(TT.IDENT).value
         self.consume(TT.ASSIGN)
         value = self.parse_expression()
-        return LetStmt(name, value)
+        return LetStmt(name, value, is_const)
     
     def parse_function(self) -> FnDef:
         name = None
@@ -580,6 +637,40 @@ class Parser:
             return ReturnStmt(None)
         return ReturnStmt(self.parse_expression())
     
+    def parse_try(self) -> TryStmt:
+        # try
+        try_body = []
+        while not self.check(TT.CATCH) and not self.check(TT.FINALLY) and not self.is_at_end():
+            try_body.append(self.parse_statement())
+        
+        catch_var = None
+        catch_body = None
+        
+        if self.match(TT.CATCH):
+            # catch(e) o catch e
+            if self.match(TT.LPAREN):
+                catch_var = self.consume(TT.IDENT).value
+                self.consume(TT.RPAREN)
+            else:
+                catch_var = self.consume(TT.IDENT).value
+            
+            catch_body = []
+            while not self.check(TT.FINALLY) and not self.check(TT.END) and not self.is_at_end():
+                catch_body.append(self.parse_statement())
+        
+        finally_body = None
+        if self.match(TT.FINALLY):
+            finally_body = []
+            while not self.check(TT.END) and not self.is_at_end():
+                finally_body.append(self.parse_statement())
+        
+        self.consume(TT.END)
+        return TryStmt(try_body, catch_var, catch_body, finally_body)
+    
+    def parse_throw(self) -> ThrowStmt:
+        value = self.parse_expression()
+        return ThrowStmt(value)
+    
     def parse_expression(self) -> Node:
         return self.parse_assignment()
     
@@ -614,10 +705,10 @@ class Parser:
                 op = self.advance().value
                 value = self.parse_assignment()
                 return CompoundAssign(expr.name, op, value)
-            # Assignment normale
+            # Assignment normale (non è una dichiarazione, è un'assegnazione)
             elif self.match(TT.ASSIGN):
                 value = self.parse_assignment()
-                return LetStmt(expr.name, value)
+                return AssignStmt(expr.name, value)
         
         return expr
     
@@ -630,9 +721,49 @@ class Parser:
         return left
     
     def parse_and(self) -> Node:
-        left = self.parse_comparison()
+        left = self.parse_logical_and()
         while self.match(TT.AND):
             op = 'and'
+            right = self.parse_logical_and()
+            left = BinaryOp(left, op, right)
+        return left
+    
+    def parse_logical_and(self) -> Node:
+        left = self.parse_logical_or()
+        while self.match(TT.LOGICAL_AND):
+            op = '&&'
+            right = self.parse_logical_or()
+            left = BinaryOp(left, op, right)
+        return left
+    
+    def parse_logical_or(self) -> Node:
+        left = self.parse_bitwise_or()
+        while self.match(TT.LOGICAL_OR):
+            op = '||'
+            right = self.parse_bitwise_or()
+            left = BinaryOp(left, op, right)
+        return left
+    
+    def parse_bitwise_or(self) -> Node:
+        left = self.parse_bitwise_xor()
+        while self.match(TT.PIPE):
+            op = '|'
+            right = self.parse_bitwise_xor()
+            left = BinaryOp(left, op, right)
+        return left
+    
+    def parse_bitwise_xor(self) -> Node:
+        left = self.parse_bitwise_and()
+        while self.match(TT.CARET):
+            op = '^'
+            right = self.parse_bitwise_and()
+            left = BinaryOp(left, op, right)
+        return left
+    
+    def parse_bitwise_and(self) -> Node:
+        left = self.parse_comparison()
+        while self.match(TT.AMPERSAND):
+            op = '&'
             right = self.parse_comparison()
             left = BinaryOp(left, op, right)
         return left
@@ -686,7 +817,7 @@ class Parser:
                 return IncrementDecrement(operand, op, prefix=True)
             raise SyntaxError("!! ++ e -- richiedono una variabile o attributo")
         
-        if self.current().type in [TT.MINUS, TT.NOT]:
+        if self.current().type in [TT.MINUS, TT.NOT, TT.TILDE]:
             op = self.advance().value
             if op == 'not':
                 op = 'not'
@@ -780,8 +911,11 @@ class Parser:
                 key = self.advance().value
             elif self.current().type == TT.STRING:
                 key = self.advance().value
+            elif self.current().type == TT.NUMBER:
+                # Permetti numeri come chiavi
+                key = self.advance().value
             else:
-                raise SyntaxError("!! Chiave mappa deve essere identificatore o stringa")
+                raise SyntaxError("!! Chiave mappa deve essere identificatore, stringa o numero")
             
             self.consume(TT.COLON)
             value = self.parse_expression()
@@ -831,6 +965,10 @@ class ContinueException(Exception):
 class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
+
+class VeurekException(Exception):
+    """Eccezione lanciata da throw"""
+    pass
 
 class VerClass:
     def __init__(self, name: str, methods: Dict[str, 'VerFunction']):
@@ -897,8 +1035,10 @@ class Interpreter:
             'max': max,
             'min': min,
             'abs': abs,
+            'switch': self.builtin_switch,
         }
         self.locals_stack = [{}]
+        self.const_vars = set()  # Traccia quali variabili sono const
     
     def builtin_map(self, iterable, func):
         result = []
@@ -923,6 +1063,28 @@ class Interpreter:
         for item in it:
             acc = self.call_function(func, [acc, item])
         return acc
+    
+    def builtin_switch(self, value, cases, default=None):
+        """
+        Funzione switch - simile a un match/case
+        Uso: switch(valore, {caso1: risultato1, caso2: risultato2, ...}, default)
+        """
+        # Se è una stringa, fai match esatto
+        if isinstance(cases, dict):
+            if value in cases:
+                result = cases[value]
+                # Se il risultato è una funzione, chiamala
+                if callable(result):
+                    return self.call_function(result, [])
+                return result
+        
+        # Se non trova niente, ritorna default
+        if default is not None:
+            if callable(default):
+                return self.call_function(default, [])
+            return default
+        
+        return None
     
     def load_library(self, filepath: str):
         """Carica una libreria da un file .ver"""
@@ -1026,6 +1188,10 @@ class Interpreter:
                 return value
         
         elif isinstance(node, CompoundAssign):
+            # Controlla se è const
+            if node.name in self.const_vars:
+                raise RuntimeError(f"!! Errore: La costante '{node.name}' non può essere modificata")
+            
             # x += 5 diventa x = x + 5
             current_value = None
             for scope in reversed(self.locals_stack):
@@ -1110,6 +1276,11 @@ class Interpreter:
         
         elif isinstance(node, LetStmt):
             value = self.execute(node.value)
+            
+            # Se è const, registra
+            if node.is_const:
+                self.const_vars.add(node.name)
+            
             # Cerca se la variabile esiste già nel closure
             for scope in reversed(self.locals_stack):
                 if node.name in scope:
@@ -1118,6 +1289,29 @@ class Interpreter:
             # Altrimenti crea nel scope corrente
             self.locals_stack[-1][node.name] = value
             return value  # Ritorna il valore assegnato
+        
+        elif isinstance(node, AssignStmt):
+            # Assegnazione a variabile già esistente
+            # Controlla se è const
+            if node.name in self.const_vars:
+                raise RuntimeError(f"!! Errore: La costante '{node.name}' non può essere modificata")
+            
+            value = self.execute(node.value)
+            
+            # Cerca e aggiorna nei scope
+            for scope in reversed(self.locals_stack):
+                if node.name in scope:
+                    scope[node.name] = value
+                    return value
+            
+            # Se non trovata nei locals, prova nei globals
+            if node.name in self.globals:
+                # Le variabili globali non possono essere riassegnate a livello di interprete
+                raise NameError(f"!! Variabile '{node.name}' è globale")
+            
+            # Se non esiste da nessuna parte, crea nel scope corrente
+            self.locals_stack[-1][node.name] = value
+            return value
         
         elif isinstance(node, FnDef):
             # Passa il riferimento allo scope corrente, non una copia
@@ -1172,6 +1366,53 @@ class Interpreter:
         elif isinstance(node, ContinueStmt):
             raise ContinueException()
         
+        elif isinstance(node, ThrowStmt):
+            value = self.execute(node.value)
+            raise VeurekException(str(value))
+        
+        elif isinstance(node, TryStmt):
+            # Esegui try block
+            try:
+                for stmt in node.try_body:
+                    self.execute(stmt)
+            except VeurekException as e:
+                # Cattura errore Elang
+                if node.catch_body:
+                    # Crea una variabile per l'errore
+                    self.locals_stack.append({})
+                    if node.catch_var:
+                        self.locals_stack[-1][node.catch_var] = str(e)
+                    
+                    try:
+                        for stmt in node.catch_body:
+                            self.execute(stmt)
+                    finally:
+                        self.locals_stack.pop()
+                else:
+                    raise
+            except (BreakException, ContinueException, ReturnException):
+                # Non catturare questi
+                raise
+            except Exception as e:
+                # Cattura altri errori Python
+                if node.catch_body:
+                    self.locals_stack.append({})
+                    if node.catch_var:
+                        self.locals_stack[-1][node.catch_var] = str(e)
+                    
+                    try:
+                        for stmt in node.catch_body:
+                            self.execute(stmt)
+                    finally:
+                        self.locals_stack.pop()
+                else:
+                    raise
+            finally:
+                # Esegui finally block se presente
+                if node.finally_body:
+                    for stmt in node.finally_body:
+                        self.execute(stmt)
+        
         elif isinstance(node, BinaryOp):
             left = self.execute(node.left)
             right = self.execute(node.right)
@@ -1204,13 +1445,26 @@ class Interpreter:
                 return self.is_truthy(left) and self.is_truthy(right)
             elif node.op == 'or':
                 return left if self.is_truthy(left) else right
+            elif node.op == '||':
+                return self.is_truthy(left) or self.is_truthy(right)
+            elif node.op == '&&':
+                return self.is_truthy(left) and self.is_truthy(right)
+            # Bitwise operators
+            elif node.op == '&':
+                return int(left) & int(right)
+            elif node.op == '|':
+                return int(left) | int(right)
+            elif node.op == '^':
+                return int(left) ^ int(right)
         
         elif isinstance(node, UnaryOp):
             operand = self.execute(node.operand)
             if node.op == '-':
                 return -operand
-            elif node.op == 'not':
+            elif node.op == 'not' or node.op == '!':
                 return not self.is_truthy(operand)
+            elif node.op == '~':
+                return ~int(operand)
         
         elif isinstance(node, Call):
             func = self.execute(node.func)
@@ -1327,7 +1581,7 @@ def run_file(filepath: str):
 def repl():
     """REPL interattivo"""
     print("=" * 60)
-    print("Veureka REPL - Linguaggio di Programmazione Interattivo")
+    print("Elang REPL - Linguaggio di Programmazione Interattivo")
     print("=" * 60)
     print("Digita 'exit' o 'quit' per uscire")
     print("Digita 'help' per vedere i comandi disponibili")
@@ -1406,7 +1660,7 @@ Esempi:
 def run_examples():
     """Esegue gli esempi dimostrativi"""
     print("=" * 60)
-    print("Veureka - Linguaggio di Programmazione")
+    print("Elang - Linguaggio di Programmazione")
     print("=" * 60)
     
     # Esempio 1: Base
@@ -1642,177 +1896,27 @@ print("Nuova distanza:", p.distanza_origine())
 """)
     
     
-# ============ COMPILATORE =============
-
-def compile_to_executable(input_file: str, output_name: str = None):
-    """Compila un file .ver in eseguibile ELF Linux"""
-    
-    input_path = Path(input_file)
-    
-    # Validazione input
-    if not input_path.exists():
-        print(f"!! Errore: File '{input_file}' non trovato")
-        return False
-    
-    if not input_path.suffix == '.ver':
-        print(f"!! Errore: Il file deve avere estensione .ver")
-        return False
-    
-    # Determina nome output
-    if output_name is None:
-        output_name = input_path.stem
-    
-    output_path = Path(output_name)
-    script_path = Path(f"_veureka_script.py")  # Nome fisso con estensione .py per Nuitka
-    
-    print(f"Compilo: {input_file} → {output_name}")
-    
-    try:
-        # Leggi il codice Veureka
-        with open(input_path, 'r', encoding='utf-8') as f:
-            veureka_code = f.read()
-        
-        # Codifica in base64 
-        veureka_code_b64 = base64.b64encode(veureka_code.encode()).decode()
-        
-        # Leggi il compilatore (questo file)
-        current_file = Path(__file__).resolve()
-        with open(current_file, 'r', encoding='utf-8') as f:
-            full_code = f.read()
-        
-        # Estrai solo il runtime (fino alla sezione COMPILATORE)
-        runtime_end = full_code.find('# ============ COMPILATORE')
-        runtime_code = full_code[:runtime_end]
-        
-        # Genera lo script wrapper
-        wrapper = f'''#!/usr/bin/env python3
-# Eseguibile Veureka compilato automaticamente
-# File originale: {input_file}
-
-import sys
-import base64
-
-{runtime_code}
-
-# Codice del programma Veureka
-if __name__ == "__main__":
-    VEUREKA_SOURCE = base64.b64decode("{veureka_code_b64}").decode()
-    
-    try:
-        lexer = Lexer(VEUREKA_SOURCE)
-        tokens = lexer.tokenize()
-        parser = Parser(tokens)
-        program = parser.parse()
-        interpreter = Interpreter()
-        interpreter.run(program)
-    except Exception as e:
-        print(f"!! Errore di esecuzione: {{e}}")
-        sys.exit(1)
-'''
-        
-        # Scrivi lo script Python
-        with open(script_path, 'w', encoding='utf-8') as f:
-            f.write(wrapper)
-        
-        os.chmod(script_path, 0o755)
-        print(f"Script Python generato")
-        print(f"Compilazione a binario ELF con Nuitka...")
-        
-        # Compila con Nuitka
-        try:
-            nuitka_path = shutil.which('nuitka')
-            if not nuitka_path:
-                nuitka_path = '/var/data/python/bin/nuitka'
-            
-            # Nuitka DEVE ricevere il nome completo con estensione .py
-            result = subprocess.run([
-                nuitka_path,
-                '_veureka_script.py'  # Il vero nome dello script con .py
-            ], timeout=600, cwd=str(Path.cwd()))
-            
-            # Nuitka crea nome_file.bin dal nome dello script (.py)
-            script_stem = Path('_veureka_script.py').stem  # _veureka_script
-            expected_bin = Path.cwd() / f"{script_stem}.bin"
-            
-            print(f"Cerco binario: {expected_bin}")
-            print(f"Esiste? {expected_bin.exists()}")
-            
-            if result.returncode == 0 and expected_bin.exists():
-                # Rinomina al nome desiderato (senza aggiungere .bin se non richiesto)
-                final_name = output_name  # Usa il nome esattamente come richiesto
-                shutil.move(str(expected_bin), final_name)
-                os.chmod(final_name, 0o755)
-                
-                # Pulisci build directory e script temporaneo
-                build_dir = Path.cwd() / f"{script_stem}.build"
-                if build_dir.exists():
-                    shutil.rmtree(str(build_dir))
-                
-                if Path(script_path).exists():
-                    os.remove(str(script_path))
-                    
-                print(f" Binario ELF creato: {final_name}")
-                print(f" Esegui con: ./{final_name}")
-                return True
-            else:
-                print(f"!! Errore Nuitka (returncode: {result.returncode})")
-                return False
-                
-        except FileNotFoundError as e:
-            print(f"!! Nuitka non trovato: {e}")
-            return False
-        except subprocess.TimeoutExpired:
-            print(f"!! Timeout durante compilazione")
-            return False
-        
-    except Exception as e:
-        print(f"!! Errore: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-    
 # ============ ENTRY POINT ============
 
 def main():
-    """Entry point del compilatore Veureka"""
+    """Entry point del compilatore Verureka"""
     if len(sys.argv) == 1:
         # Nessun argomento: avvia REPL
         repl()
-    elif sys.argv[1] == "-c":
-        # Modalità compilazione
-        if len(sys.argv) < 3:
-            print("Uso: python veureka.py -c <file.ver> [-o <output>]")
-            sys.exit(1)
-        
-        input_file = sys.argv[2]
-        output_name = None
-        
-        # Parsing argomenti aggiuntivi
-        for i in range(3, len(sys.argv)):
-            if sys.argv[i] == '-o' and i + 1 < len(sys.argv):
-                output_name = sys.argv[i + 1]
-                break
-        
-        success = compile_to_executable(input_file, output_name)
-        sys.exit(0 if success else 1)
     elif sys.argv[1] == "--examples":
         # Esegui esempi
         run_examples()
     elif sys.argv[1] in ["-h", "--help"]:
         # Help
         print("""
-Veureka - Linguaggio di Programmazione
+Elang - Linguaggio di Programmazione
 
 Uso:
-    python veureka.py                      # Avvia REPL interattivo
-    python veureka.py script.ver           # Esegue un file
-    python veureka.py -c script.ver        # Compila a eseguibile
-    python veureka.py -c script.ver -o app # Compila con nome custom
-    python veureka.py --examples            # Esegue gli esempi
-    python veureka.py --help                # Mostra questo messaggio
-
-Esempi di sintassi Veureka:
-
+    python elang.py                    # Avvia REPL interattivo
+    python elang.py script.ver        # Esegue un file
+    python elang.py --examples         # Esegue gli esempi
+    python elang.py --help             # Mostra questo messaggio
+Esempi di sintassi Elang:
     # Variabili
     let x = 10
     
@@ -1839,7 +1943,7 @@ Esempi di sintassi Veureka:
     let p = new Persona("Mario", 25)
     p.saluta()
 
-Per maggiori informazioni, visita: https://github.com/vincenzofranchino/veureka-lang
+Per maggiori informazioni, visita: https://github.com/vincenzofranchino/e-lang
         """)
     else:
         # Esegui file
