@@ -466,7 +466,7 @@ print(p.distanza())  # 7.07...
 - [x] Input da terminale
 - [x] Sistema di librerie (include)
 - [ ] Compilazione a binari ELF standalone
-- [ ] Gestione eccezioni (try/catch/finally)
+- [x] Gestione eccezioni (try/catch/finally)
 - [ ] Ereditarietà tra classi
 - [ ] Decoratori
 - [ ] Generatori e iteratori custom
